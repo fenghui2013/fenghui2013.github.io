@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <link rel="dns-prefetch" href="http://yoursite.com">
+  <title>理论篇-redis | 个人小站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="redis设计的主旨: 简单 高效
+数据结构与对象redis中一切皆对象，共包含5种对象，分别为字符串对象(string object)、列表对象(list object)、哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)。
+数据结构简单动态字符串12345struct sdshdr &amp;#123;    int len;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理论篇-redis">
+<meta property="og:url" content="http://yoursite.com/2017/05/04/理论篇-redis/index.html">
+<meta property="og:site_name" content="个人小站">
+<meta property="og:description" content="redis设计的主旨: 简单 高效
+数据结构与对象redis中一切皆对象，共包含5种对象，分别为字符串对象(string object)、列表对象(list object)、哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)。
+数据结构简单动态字符串12345struct sdshdr &amp;#123;    int len;">
+<meta property="og:image" content="http://yoursite.com/img/redis_server_1.png">
+<meta property="og:image" content="http://yoursite.com/img/redis_server_2.png">
+<meta property="og:image" content="http://yoursite.com/img/redis_server_3.png">
+<meta property="og:image" content="http://yoursite.com/img/redis_server_4.png">
+<meta property="og:updated_time" content="2017-06-30T07:52:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理论篇-redis">
+<meta name="twitter:description" content="redis设计的主旨: 简单 高效
+数据结构与对象redis中一切皆对象，共包含5种对象，分别为字符串对象(string object)、列表对象(list object)、哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)。
+数据结构简单动态字符串12345struct sdshdr &amp;#123;    int len;">
+<meta name="twitter:image" content="http://yoursite.com/img/redis_server_1.png">
+  
+    <link rel="alternative" href="/atom.xml" title="个人小站" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/assets/img/favicon.ico">
+  
+  <link rel="stylesheet" type="text/css" href="/./main.4a524f.css">
+  <style type="text/css">
+  
+    #container.show {
+      background: linear-gradient(200deg,#a0cfe4,#e8c37e);
+    }
+  </style>
+  
+
+  
+<script>
+var _hmt = _hmt || [];
+(function() {
+	var hm = document.createElement("script");
+	hm.src = "https://hm.baidu.com/hm.js?a30844fa2bcbce0a9e001fe06cefeddf";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="container" q-class="show:isCtnShow">
+    <canvas id="anm-canvas" class="anm-canvas"></canvas>
+    <div class="left-col" q-class="show:isShow">
+      
+<div class="overlay" style="background: #4d4d4d"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			<img src="/img/fenghui2013.png" class="js-avatar">
+		</a>
+		<hgroup>
+		  <h1 class="header-author"><a href="/">fenghui2013</a></h1>
+		</hgroup>
+		
+
+		<nav class="header-menu">
+			<ul>
+			
+				<li><a href="/">主页</a></li>
+	        
+			</ul>
+		</nav>
+		<nav class="header-smart-menu">
+    		
+    			
+    			<a q-on="click: openSlider(e, 'innerArchive')" href="javascript:void(0)">所有文章</a>
+    			
+            
+    			
+            
+    			
+    			<a q-on="click: openSlider(e, 'aboutme')" href="javascript:void(0)">关于我</a>
+    			
+            
+		</nav>
+		<nav class="header-nav">
+			<div class="social">
+				
+					<a class="github" target="_blank" href="https://github.com/fenghui2013" title="github"><i class="icon-github"></i></a>
+		        
+			</div>
+		</nav>
+	</header>		
+</div>
+
+    </div>
+    <div class="mid-col" q-class="show:isShow,hide:isShow|isFalse">
+      
+<nav id="mobile-nav">
+  	<div class="overlay js-overlay" style="background: #4d4d4d"></div>
+	<div class="btnctn js-mobile-btnctn">
+  		<div class="slider-trigger list" q-on="click: openSlider(e)"><i class="icon icon-sort"></i></div>
+	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img src="/img/fenghui2013.png" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author js-header-author">fenghui2013</h1>
+			</hgroup>
+			
+			
+			
+				
+			
+			
+			
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/fenghui2013" title="github"><i class="icon-github"></i></a>
+			        
+				</div>
+			</nav>
+
+			<nav class="header-menu js-header-menu">
+				<ul style="width: 50%">
+				
+				
+					<li style="width: 100%"><a href="/">主页</a></li>
+		        
+				</ul>
+			</nav>
+		</header>				
+	</div>
+	<div class="mobile-mask" style="display:none" q-show="isShow"></div>
+</nav>
+
+      <div id="wrapper" class="body-wrap">
+        <div class="menu-l">
+          <div class="canvas-wrap">
+            <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
+          </div>
+          <div id="js-content" class="content-ll">
+            <article id="post-理论篇-redis" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      理论篇-redis
+    </h1>
+  
+
+        
+        <a href="/2017/05/04/理论篇-redis/" class="archive-article-date">
+  	<time datetime="2017-05-04T08:20:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-05-04</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>redis设计的主旨: 简单 高效</p>
+<h3 id="数据结构与对象"><a href="#数据结构与对象" class="headerlink" title="数据结构与对象"></a>数据结构与对象</h3><p>redis中一切皆对象，共包含5种对象，分别为字符串对象(string object)、列表对象(list object)、哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)。</p>
+<h4 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h4><h5 id="简单动态字符串"><a href="#简单动态字符串" class="headerlink" title="简单动态字符串"></a>简单动态字符串</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">struct sdshdr &#123;</div><div class="line">    int len;      # 字符串长度</div><div class="line">    int free;     # 未使用空间长度</div><div class="line">    char buf[];   # 字节数组</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>与C字符串的比较:</p>
+<ul>
+<li>通过len字段，获取字符串长度的时间复杂度为O(1)</li>
+<li>通过len字段，杜绝了缓冲区溢出问题</li>
+<li>通过预分配策略和惰性空间释放策略避免了频繁的内存重分配</li>
+<li>二进制安全</li>
+<li>通过保留最后一个字符为空字符，可以复用C的字符串库函数，但是前提是字符串中不包含空字符，否则处理出错</li>
+</ul>
+<h5 id="双向列表"><a href="#双向列表" class="headerlink" title="双向列表"></a>双向列表</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">typedef struct listNode &#123;</div><div class="line">    struct listNode *prev;               # 前一个节点</div><div class="line">    struct listNode *next;               # 后一个节点</div><div class="line">    void *value;                         # 节点值</div><div class="line">&#125; listNode;</div><div class="line"></div><div class="line">typedef struct list &#123;</div><div class="line">    listNode *head;                      # 表头节点</div><div class="line">    listNode *tail;                      # 表尾节点</div><div class="line">    unsigned long len;                   # 节点数量</div><div class="line">    void *(*dup)(void *ptr);             # 节点值复制函数</div><div class="line">    void *(*free)(void *ptr);            # 节点值释放函数</div><div class="line">    int (*match)(void *ptr, void *key);  # 节点值对比函数</div><div class="line">&#125; list;</div></pre></td></tr></table></figure>
+<p>通过使用指定value的值为void*和dup、free、match可以实现多态链表。</p>
+<h5 id="哈希表"><a href="#哈希表" class="headerlink" title="哈希表"></a>哈希表</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line">哈希表</div><div class="line">typedef struct dictht &#123;</div><div class="line">    dictEntry **table;      # 哈希表数组</div><div class="line">    unsigned long size;     # 哈希表大小</div><div class="line">    unsigned long sizemask; # 哈希表大小掩码，用于计算索引值，总是等于size-1</div><div class="line">    unsigned long used;     # 键值对数量</div><div class="line">&#125; dictht;</div><div class="line"></div><div class="line">load_factor = ht[0].used/ht[0].size;   # 负载因子</div><div class="line"></div><div class="line">哈希表节点</div><div class="line">typedef struct dictEntry &#123;</div><div class="line">    void *key;              # 键</div><div class="line">    union &#123;</div><div class="line">        void *val;</div><div class="line">        uint64_t u64;</div><div class="line">        int64_t s64;</div><div class="line">    &#125; v;                    # 值</div><div class="line">    struct dictEntry *next; # 下一个节点，用于解决冲突</div><div class="line">&#125; dictEntry;</div><div class="line"></div><div class="line">字典</div><div class="line">typedef struct dict &#123;</div><div class="line">    dictType *type;         # 类型特定函数，为实现多态字典</div><div class="line">    void *privdata;         # 保存传给特定函数的可选参数</div><div class="line">    dictht ht[2];           # 哈希表</div><div class="line">    int rehashidx;          # 当rehash不在进行时，值为-1，否则为哈希表数组的索引</div><div class="line">&#125; dict;</div><div class="line">ht属性包含两个哈希表，一般使用第一个，第二个只在rehash时才使用。</div><div class="line"></div><div class="line">typedef struct dictType &#123;</div><div class="line">    unsigned int (*hashFunction)(const void *key);     # 哈希函数</div><div class="line">    void *(*keyDup)(void *privdata, const void *key);  # 复制键的函数</div><div class="line">    void *(*valDup)(void *privdata, const void *obj);  # 复制值的函数</div><div class="line">    int *(*keyCompare)(void *privdata, const void *key1, const void *key2);                                                # 比较键的函数</div><div class="line">    void *(*keyDestructor)(void *privdata, void *key); # 销毁键的函数</div><div class="line">    void *(*valDestructor)(void *privdata, void *obj); # 销毁值得函数</div><div class="line">&#125; dictType;</div></pre></td></tr></table></figure>
+<p>MurmurHash算法</p>
+<h5 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h5><p>实现有序集合的底层数据结构之一是跳跃表。当有序集合包含的元素数量比较多，又或者有序结合中元素的成员是比较长的字符串时，redis就会使用跳跃表作为有序集合键的底层实现。</p>
+<p>跳跃表支持平均O(lgN)，最坏O(N)的时间复杂度。大部分情况下，跳跃表的性能可以和平衡树相媲美，又因为跳跃表的实现比平衡树简单，所以很多程序使用跳跃表来代替平衡树。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">typedef struct zskiplistNode &#123;</div><div class="line">    struct zskiplistLevel &#123;</div><div class="line">        struct zskiplistNode *forward;  # 前进指针</div><div class="line">        unsigned int span;              # 跨度</div><div class="line">    &#125; level[];                          # 层</div><div class="line">    struct zskiplistNode *backward;     # 后退指针</div><div class="line">    double score;                       # 分值</div><div class="line">    robj *obj;                          # 成员对象</div><div class="line">&#125; zskiplistNode;</div><div class="line"></div><div class="line">typedef struct zskiplist &#123;</div><div class="line">    struct zskiplistNode *header, *tail;   # 头尾节点</div><div class="line">    unsigned long length;                  # 节点数量</div><div class="line">    int level;                             # 层数最大的节点的层数</div><div class="line">&#125; zskiplist;</div></pre></td></tr></table></figure>
+<p>根据幂次定律生成层数。</p>
+<h5 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h5><p>实现集合的底层数据结构之一是整数集合。当一个集合只包含整数元素，并且这个集合的元素数量不多时，redis就会使用整数集合作为集合的底层实现。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">typedef struct intset &#123;</div><div class="line">    uint32_t encoding;    # 编码方式: int16_t int32_t int64_t</div><div class="line">    uint32_t length;      # 元素数量</div><div class="line">    int8_t contents[];    # 保存元素的数组</div><div class="line">&#125; intset;</div></pre></td></tr></table></figure>
+<p><strong>升级</strong>:每当添加一个新元素，并且新元素比所有现有元素的类型都要长时整数集合需要先进行升级，然后才能将新元素添加到整数集合里面。</p>
+<p><strong>只有升级没有降级</strong></p>
+<h5 id="压缩列表"><a href="#压缩列表" class="headerlink" title="压缩列表"></a>压缩列表</h5><p>压缩列表是列表和哈希的底层实现之一。当一个列表键只包含少量列表项，并且每个列表项要么是小整数要么是长度比较短的字符串，那么redis就会使用压缩列表作为列表的底层实现。当一个字典，只包含少量键值对，并且每个键值对的键和值要么是小整数要么是长度比较短的字符串，那么redis就会使用压缩列表作为字典的底层实现。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"># ziplist</div><div class="line">zlbytes|zltail|zllen|entry1|entry2|...|entryN|zlend</div><div class="line"></div><div class="line"># ziplistEntry</div><div class="line">previous_entry_length|encoding|content</div></pre></td></tr></table></figure>
+<ul>
+<li>压缩列表是一种为节约内存而开发的顺序型数据结构</li>
+<li>压缩列表被用作列表和字典的底层实现之一</li>
+<li>压缩列表可以包含多个节点，每个节点可以保存一个字节数组或整数值</li>
+<li>添加新节点到压缩列表或从压缩列表中删除节点，可能会引发连锁更新操作，但这种操作出现的几率并不高</li>
+</ul>
+<h4 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h4><p>redis有一个对象系统，该系统包括字符串对象、列表对象、哈希对象、集合对象和有序集合对象这五种类型的对象。每种对象至少用到了一种我们之前介绍的数据结构。</p>
+<p>redis执行命令前，根据对象的类型来判断一个对象是否可以执行给定的命令。redis可以在不同的场景下，为同样的对象选择不同的数据结构，从而达到最高的使用效率。</p>
+<p>redis实现了基于引用计数技术的内存回收机制，且通过引用计数技术实现了对象共享机制。</p>
+<p>对象还带有时间信息，该信息用于计算键的空转时长，当服务器启用maxmemory时，空转时长长的那些键优先被回收。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">typedef struct redisObject &#123;</div><div class="line">    unsigned type:4;     # 类型</div><div class="line">    unsigned encoding:4; # 编码</div><div class="line">    void *ptr;           # 指向底层实现数据结构的指针</div><div class="line">    unsigned lru:22      # 空转时长</div><div class="line">&#125; robj;</div></pre></td></tr></table></figure>
+<p>type的取值</p>
+<table>
+<thead>
+<tr>
+<th>类型常量</th>
+<th>对象的名称</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REDIS_STRING</td>
+<td>字符串对象</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>列表对象</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>哈希对象</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>集合对象</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>有序集合对象</td>
+</tr>
+</tbody>
+</table>
+<p>对于redis保存的键值对来说，键总是一个字符串对象，而值可以是字符串对象、列表对象、哈希对象、集合对象、有序集合对象。</p>
+<p>encoding的取值</p>
+<table>
+<thead>
+<tr>
+<th>类型常量</th>
+<th>底层数据结构</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REDIS_ENCODING_INT</td>
+<td>long类型的整数</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_EMBSTR</td>
+<td>embstr编码的简单动态字符串</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_RAW</td>
+<td>简单动态字符串</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_HT</td>
+<td>哈希表</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td>双向链表</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>压缩列表</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_INTSET</td>
+<td>整数集合</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>跳跃表</td>
+</tr>
+</tbody>
+</table>
+<p>每种类型至少使用了两种不同的编码，以下是不同类型和编码的对象</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>编码</th>
+<th>使用条件 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_INT</td>
+<td>保存的是整数值，且可以使用long类型存储</td>
+</tr>
+<tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_EMBSTR</td>
+<td>字符串的长度小于等于32字节</td>
+</tr>
+<tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_RAW</td>
+<td>字符串的长度大于32字节</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>1. 所有字符串长度都小于64字节 2. 保存的元素数量小于512个</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td>违反以上两条的任意一条则使用该编码</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>1. 所有键值对的键和值得字符串长度都小于64字节 2. 保存的键值对的数量小于512个</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>REDIS_ENCODING_HT</td>
+<td>违反以上两条的任意一条则使用该编码</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>REDIS_ENCODING_INTSET</td>
+<td>1. 保存的所有元素都是整数值 2. 保存的元素数量不超过512个</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>REDIS_ENCODING_HT</td>
+<td>违反以上两条的任意一条则使用该编码</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>1. 保存的所有元素的长度都小于64字节 2. 保存的元素数量小于128个</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>违反以上两条的任意一条则使用该编码</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"># 列表对象</div><div class="line">list-max-ziplist-value       # 字符串最大长度</div><div class="line">list-max-ziplist-entries     # 列表保存的最大元素数量</div><div class="line"></div><div class="line"># 哈希对象</div><div class="line">hash-max-ziplist-value       # 哈希键值对的字符串最大长度</div><div class="line">hash-max-ziplist-entries     # 哈希表保存的最大键值对数量</div><div class="line"></div><div class="line"># 集合对象</div><div class="line">set-max-intset-entries       # 集合保存的最大元素数量</div><div class="line"></div><div class="line"># 有序集合对象</div><div class="line">typedef struct zset &#123;</div><div class="line">    zskiplist *zsl;</div><div class="line">    dict *dict;</div><div class="line">&#125; zset;</div><div class="line">有序集合对象同时使用跳跃表和字典来实现，为了兼得各自的优点。</div><div class="line"></div><div class="line">zset-max-ziplist-value       # 有序集合保存的元素的最大长度</div><div class="line">zset-max-ziplist-entries     # 有序集合保存的最大元素数</div></pre></td></tr></table></figure>
+<h4 id="类型检查与命令多态"><a href="#类型检查与命令多态" class="headerlink" title="类型检查与命令多态"></a>类型检查与命令多态</h4><p>类型检查通过redisObject结构的type属性实现。</p>
+<h4 id="内存回收"><a href="#内存回收" class="headerlink" title="内存回收"></a>内存回收</h4><h4 id="对象共享"><a href="#对象共享" class="headerlink" title="对象共享"></a>对象共享</h4><p>redis服务启动的时候，会自动创建一万个字符串对象，这些对象包括了从0到9999的所有整数值。</p>
+<p><strong>好问题</strong>: 为什么redis不共享包含字符串的对象？</p>
+<ul>
+<li>如果共享对象是保存整数值的字符串对象，那么验证操作的复杂度是O(1)</li>
+<li>如果共享对象是保存字符串值得字符串对象，那么验证操作的复杂度是O(N)</li>
+<li>如果共享对象是包含了多个值(或者对象)的对象，比如列表对象或者哈希对象，那么验证操作的复杂度是O($N^2$)</li>
+</ul>
+<h3 id="超时机制"><a href="#超时机制" class="headerlink" title="超时机制"></a>超时机制</h3><p>redis里面的超时时间是以unix时间戳(2.6之后是毫秒)的形式保存的。过期的精度在0~1毫秒之间。</p>
+<p>redis里key的过期方式有两种: 1.被动过期 2.主动过期</p>
+<p>被动过期方式: 当客户端尝试访问一个key时，检查这个key是否超时。</p>
+<p>主动过期方式: redis会每隔一段时间检查过期key集合里面的key是否超时。</p>
+<p>定时删除方式: 在设置键的过期时间的同时，创建一个定时器(timer)，让定时器在键的过期时间来临时，立即执行对键的删除操作。</p>
+<p>redis主动检查过期的频率为每秒10次:</p>
+<ol>
+<li>从过期的key集合里面随机抽取20个进行测试</li>
+<li>删除所有过期的key</li>
+<li>如果过期的key超过25%，则再从第一步开始</li>
+</ol>
+<p>在集群之间，对于过期的key，由主节点向从节点发送DEL操作，从而保证一致性问题。但是从节点也保存过期信息，这样当从节点被选举为主节点时，也可以执行过期操作。</p>
+<h3 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">struct redisServer &#123;</div><div class="line">    redisDb *db;   # 数组，保存服务器中的所有数据库</div><div class="line">    int dbnum;     # 服务器的数据库数量</div><div class="line">&#125;;</div><div class="line"></div><div class="line">typedef struct redisClient &#123;</div><div class="line">    redisDb *db;   # 记录客户端当前正在使用的数据库 </div><div class="line">&#125; redisClient;</div><div class="line"></div><div class="line">typedef struct redisDb &#123;</div><div class="line">    dict *dict;    # 数据库键空间</div><div class="line">    dict *expires; # 保存着键的过期时间 </div><div class="line">&#125; redisDb;</div></pre></td></tr></table></figure>
+<p><img src="/img/redis_server_1.png" alt="redis_server_1"></p>
+<p><img src="/img/redis_server_2.png" alt="redis_server_2"></p>
+<p><img src="/img/redis_server_3.png" alt="redis_server_3"></p>
+<p><img src="/img/redis_server_4.png" alt="redis_server_4"></p>
+<h3 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h3><p>redis有两种持久化方式和: RDB持久化和AOF持久化。</p>
+<p>RDB持久化方式通过将数据库中的所有键值对持久化到磁盘的方式完成。AOF持久化方式通过记录修改命令来记录数据库的状态。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">struct redisServer &#123;</div><div class="line">    long long dirty;               # 修改计数器</div><div class="line">    time_t lastsave;               # 上次保存的时间</div><div class="line">    struct saveparam *saveparams;  # 记录了保存条件的数组</div><div class="line">    sds aof_buf;                   # AOF缓冲区</div><div class="line">&#125;;</div><div class="line"></div><div class="line">struct saveparam &#123;</div><div class="line">    time_t seconds;  # 秒数</div><div class="line">    int changes;     # 修改数</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h4 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h4><p>RDB持久化有两种触发方式:</p>
+<ul>
+<li>手动触发: BGSAVE和SAVE</li>
+<li>自动触发: save配置</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">RDB文件格式:</div><div class="line">REDIS|db_version|databases|FOF|check_sum</div><div class="line"></div><div class="line">REDIS: 5个字节 值为REDIS</div><div class="line">db_version: 4个字节 rdb文件的版本号 比如0006</div><div class="line">databases: 0个或多个数据库</div><div class="line">EOF: 1个字节 值为EOF</div><div class="line">check_sum: 8个字节的无符号整数 通过前面的内容计算出校验和</div><div class="line"></div><div class="line">database结构:</div><div class="line">SELECTDB|db_number|key_value_pairs</div><div class="line"></div><div class="line">SELECTDB: 1个字节</div><div class="line">db_number: 数据库号 长度可能是1字节 2字节或者5字节</div><div class="line">key_value_pairs: 所有键值对数据，大小不定</div><div class="line"></div><div class="line">key_value_pairs(没有过期时间)结构:</div><div class="line">TYPE|key|value</div><div class="line">key_value_pairs(有过期时间)结构:</div><div class="line">EXPIRETIME_MS|ms|TYPE|key|value</div><div class="line"></div><div class="line">EXPIRETIME_MS: 1个字节</div><div class="line">ms: 8个字节 毫秒级的时间戳</div><div class="line"></div><div class="line">TYPE记录了value的类型:</div><div class="line">REDIS_RDB_TYPE_STRING</div><div class="line">REDIS_RDB_TYPE_LIST</div><div class="line">REDIS_RDB_TYPE_SET</div><div class="line">REDIS_RDB_TYPE_ZSET</div><div class="line">REDIS_RDB_TYPE_HASH</div><div class="line">REDIS_RDB_TYPE_LIST_ZIPLIST</div><div class="line">REDIS_RDB_TYPE_SET_INTSET</div><div class="line">REDIS_RDB_TYPE_ZSET_ZIPLIST</div><div class="line">REDIS_RDB_TYPE_HASH_ZIPLIST</div><div class="line"></div><div class="line">各个value的编码方式参看《redis设计与实现》或官网文档</div></pre></td></tr></table></figure>
+<h4 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h4><p>AOF持久化分为三个部分: 命令追加、文件写入、文件同步</p>
+<p>随着服务器的运行，AOF的体积会越来越大，所以需要对AOF文件进行重建。AOF文件重建原理如下:通过添加对数据库中现有键值对的重建命令而完成。</p>
+<p>redis创建一个子进程在后台完成AOF重建工作。由于主进程还在处理客户端的请求，所以会造成重建的AOF文件与实际数据库状态不一样。redis新增了一个AOF重建缓冲区，将重建过程中所有的命令写入到该缓冲区，待重建完成后，子进程向父进程发送信号，父进程收到信号后将该缓冲区的内容追加到AOF重建文件中，然后原子的替换原来的AOF文件。</p>
+<h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><p>redis服务器是一个事件驱动程序，处理的事件包含两大类: 文件事件和时间事件。</p>
+<h4 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h4><p>文件事件就是对网络IO的一种抽象。</p>
+<table>
+<thead>
+<tr>
+<th>网络IO</th>
+<th>文件事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>accept</td>
+<td>READABLE</td>
+</tr>
+<tr>
+<td>read</td>
+<td>READABLE</td>
+</tr>
+<tr>
+<td>close</td>
+<td>READABLE</td>
+</tr>
+<tr>
+<td>write</td>
+<td>WRITABLE</td>
+</tr>
+</tbody>
+</table>
+<h4 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h4><ul>
+<li>定时事件: 让一段程序在指定的时间之后执行一次。</li>
+<li>周期性事件: 让一段程序每个一定时间就执行一次。</li>
+</ul>
+<p>redis通过程序的返回值来区分定时事件和周期性事件。返回值为下次该函数执行的间隔时间。(<strong>该方法可以借鉴</strong>)</p>
+<h3 id="客户端与服务器"><a href="#客户端与服务器" class="headerlink" title="客户端与服务器"></a>客户端与服务器</h3><h4 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">struct redisServer &#123;</div><div class="line">    list *clients;  # 一个链表，保存所有的客户端的状态</div><div class="line">&#125;;</div><div class="line"></div><div class="line">typedef struct redisClient &#123;</div><div class="line">    int fd;                     # 套接字描述符</div><div class="line">    robj *name;                 # 名字</div><div class="line">    int flag;                   # 标记客户端的角色</div><div class="line">    sds querybuf;               # 输入缓冲区</div><div class="line">    robj **argv;                # 命令参数</div><div class="line">    int argc;                   # 命令参数个数</div><div class="line">    struct redisCommand *cmd;   # 命令对应的执行函数 </div><div class="line">    char buf[REDIS_REPLY_CHUNK_BYTES] # 固定输出缓冲区</div><div class="line">    int bufpos;                       # 固定输出缓冲区中目前已使用的字节数量</div><div class="line">    list *reply;                      # 可变输出缓冲区</div><div class="line">    int authenticated;                # 身份验证</div><div class="line">    time_t ctime;                     # 建立连接的时间</div><div class="line">    time_t lastinteraction;           # 上次交互的时间</div><div class="line">    time_t obuf_soft_limit_reached_time; # </div><div class="line">    </div><div class="line">&#125; redisClient;</div></pre></td></tr></table></figure>
+<p>redis中的客户端有两种: 真客户端和伪客户端。其中，伪客户端用于载入AOF文件或执行lua脚本中包含的redis命令。</p>
+<h4 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">struct redisServer &#123;</div><div class="line">    unsigned lruclock:22;   # 系统用于计算键的空转时长</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>redis通过周期性的执行serverCon函数来维持服务器的状态。</p>
+<p>redis在服务器启动的时候会创建一些共享对象，比如”OK”, “ERR”, 1到10000的字符串对象。(这种技术在很多地方都可见到，比如jvm里)</p>
+<h3 id="主从复制"><a href="#主从复制" class="headerlink" title="主从复制"></a>主从复制</h3><p>当slaveof命令执行完毕后，从节点会向主节点发送PSYNC命令，如果是初次同步，则执行完整重同步(full resynchronization)，主节点生成RDB文件，然后传输给从节点，从节点载入RDB文件。若载入RDB文件期间，主节点有写操作，则主节点将命令传播给从节点，使主从一致。若断线重连后，则执行部分重同步(partial resynchronization)，主机点只将从节点断线期间执行的写操作发送给从节点，使主从一致。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">struct redisServer &#123;</div><div class="line">    char *masterhost;     # 主服务器地址</div><div class="line">    char *masterport;     # 主服务器端口</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>主从复制的实现:</p>
+<ol>
+<li>设置主服务器的地址和端口</li>
+<li>建立连接</li>
+<li>发送PING命令</li>
+<li>身份验证</li>
+<li>发送端口信息</li>
+<li>同步</li>
+<li>命令传播</li>
+</ol>
+<h3 id="sentinel-哨兵节点"><a href="#sentinel-哨兵节点" class="headerlink" title="sentinel(哨兵节点)"></a>sentinel(哨兵节点)</h3><p>sentinel(哨兵节点)是redis的高可用解决方案。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">struct sentinelState &#123;</div><div class="line">    uint64_t current_epoch;   # </div><div class="line">    dict *masters;            # 所有被监视的服务器</div><div class="line">    int tilt;</div><div class="line">    int running_scripts;</div><div class="line">    mstime_t tilt_start_time; #</div><div class="line">    mstime_t previous_time;</div><div class="line">    list *scripts_queue;      #  </div><div class="line">&#125;;</div><div class="line"></div><div class="line">masters的值:</div><div class="line">typedef struct sentinelRedisInstance &#123;</div><div class="line">    int flags;              # 记录了实例的类型以及该实例的状态</div><div class="line">    char *name;             # 实例的名字</div><div class="line">    char *runid;            # 实例运行id</div><div class="line">    uint64_t config_epoch;  # 配置epoch</div><div class="line">    sentinelAddr *addr;     # 实例地址</div><div class="line">    dict *slaves;           # 从节点信息</div><div class="line">    dict *sentinels;        # 其它sentinels信息</div><div class="line">    mstime_t down_after_period;  # 判断主节点下线的时间限制</div><div class="line">    int quorum;                  # 判断主节点下限的sentinel的投票数量 </div><div class="line">    int parallel_syncs;          #</div><div class="line">    mstime_t failover_timeout;   # </div><div class="line">&#125; sentinelRedisInstance;</div></pre></td></tr></table></figure>
+<h4 id="节点之间的连接"><a href="#节点之间的连接" class="headerlink" title="节点之间的连接"></a>节点之间的连接</h4><p>当启动sentinel节点后，sentinel与主节点建立如下连接:</p>
+<ul>
+<li>命令连接</li>
+<li>订阅连接</li>
+</ul>
+<p>sentinel从主节点获取从节点信息后，也建立以上两个连接。</p>
+<p>其他监控主节点的sentinel也对主节点和从节点建立以上连接。sentinel会通过订阅连接向主节点发送消息，其它订阅了该主节点的sentinel节点收到消息后可得知监视同一主节点的所有其它所有sentinel节点。</p>
+<p>sentinel节点之间会互相建立命令连接。</p>
+<h4 id="判断主节点失效的机制"><a href="#判断主节点失效的机制" class="headerlink" title="判断主节点失效的机制"></a>判断主节点失效的机制</h4><p>当一个主节点对于一个sentinel节点不可达down-after-milliseconds毫秒后，该sentinel节点就认为该主节点主观下线。</p>
+<p>然后询问其它监视该主节点的sentinel节点，若超过预设置的值则认为该节点客观下线。随后进行新主节点的选举。</p>
+<h4 id="节点选举"><a href="#节点选举" class="headerlink" title="节点选举"></a>节点选举</h4><p>首先，简单介绍下redis的sentinel的概念，然后通过一个简单的例子来说明redis的sentinel的运行机制。</p>
+<ul>
+<li>一个主节点下可以有多个从节点</li>
+<li>一个主节点可以被多个sentinel节点监视</li>
+<li>当主节点被判断为客观下线状态时，会有两个选举过程</li>
+<li>第一个选举过程是从所有监视该主节点的sentinel里产生领头sentinel，第二个选举过程是从所有的从节点中产生主节点</li>
+</ul>
+<p>这个选举机制和总统选举很像。总统相当于主节点，总统胡选人相同于从节点，各大有钱有势的集团相当于sentinel。当总统换届时，各大集团选举出一个领头的集团，该领头的集团从总统候选人中选出一个新的总统。</p>
+<p>redis采用了Raft算法保证各个节点达成共识。</p>
+<h3 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">struct clusterNode &#123;</div><div class="line">    mstime_t ctime;                    # 创建节点的时间</div><div class="line">    char name[REDIS_CLUSTER_NAMELEN];  # 节点的名字</div><div class="line">    int flags;                         # 节点标识(主节点或从节点 上线或下线)</div><div class="line">    uint64_t configEpoch;              # 用于故障转移</div><div class="line">    char ip[REDIS_IP_STR_LEN];         # 节点的ip地址</div><div class="line">    int port;                          # 节点的端口号</div><div class="line">    clusterLink *link;                 # 保存连接节点的相关信息</div><div class="line">    unsigned char slots[16384/8];      # 槽</div><div class="line">    int numslots;                      # 槽数</div><div class="line">&#125;;</div><div class="line"></div><div class="line">typedef struct clusterLink &#123;</div><div class="line">    mstime_t ctime;                    # 连接的创建时间</div><div class="line">    int fd;                            # tcp套接字</div><div class="line">    sds sndbuf;                        # 输出缓冲区</div><div class="line">    sds rcvbuf;                        # 输入缓冲区</div><div class="line">    struct clusterNode *node;          # 与该连接相关联的节点</div><div class="line">&#125; clusterLink;</div><div class="line"></div><div class="line">typedef struct clusterState &#123;</div><div class="line">    clusterNode *myself;               # 指向当前节点的指针</div><div class="line">    uint64_t currentEpoch;             # 用于故障转移</div><div class="line">    int state;                         # 集群状态: 在线或下线</div><div class="line">    int size;                          # </div><div class="line">    dict *nodes;                       # 集群中所有的节点</div><div class="line">    clusterNode *slots[16384];         # 所有槽的分配情况</div><div class="line">    zskiplist *slots_to_keys;          # 槽与键的对应关系</div><div class="line">&#125; clusterState;</div></pre></td></tr></table></figure>
+<p><strong>redis集群思想:</strong> redis的集群由节点组成，其中包括主节点和从节点。集群按照槽进行分片，共支持16384个槽，每个主节点负责一部分的槽存储。当进行某个键的存取操作时，首先根据键计算出对应的槽值，然后根据槽值去对应的节点进行操作。从节点负责备份主节点，并且当主节点失效时，进行故障转移。</p>
+<h3 id="发布订阅"><a href="#发布订阅" class="headerlink" title="发布订阅"></a>发布订阅</h3><p>redis的发布订阅系统底层通过字典和链表实现。</p>
+<h3 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">typedef struct redisClient &#123;</div><div class="line">    multiState mstate;              # 事务状态</div><div class="line">&#125; redisClient;</div><div class="line"></div><div class="line">typedef struct multiState &#123;</div><div class="line">    multiCmd *commands;             # 事务队列</div><div class="line">    int count;                      # 命令数量</div><div class="line">&#125; multiState;</div><div class="line"></div><div class="line">typedef struct multiCmd &#123;</div><div class="line">    robj **argv;                    # 参数</div><div class="line">    int argc;                       # 参数数量</div><div class="line">    struct redisCommand *cmd;       # 命令指针</div><div class="line">&#125; multiCmd;</div></pre></td></tr></table></figure>
+<h3 id="待研究"><a href="#待研究" class="headerlink" title="待研究"></a>待研究</h3><ul>
+<li>内存回收算法</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">redis</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/05/04/理论篇-redis/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2017/05/05/理论篇-数据结构之哈希表VS红黑树/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          理论篇-数据结构之哈希表VS红黑树
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/05/04/理论篇-计算机之原码反码补码/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">理论篇-计算机之原码反码补码</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+
+
+
+
+  
+  <div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="理论篇-redis" data-title="理论篇-redis" data-url="http://yoursite.com/2017/05/04/理论篇-redis/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"litten-hexo"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+  
+
+
+
+
+          </div>
+        </div>
+      </div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2017 fenghui2013
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    <script>
+	var yiliaConfig = {
+		mathjax: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true,
+		root: "/",
+		innerArchive: true,
+		showTags: false
+	}
+</script>
+
+<script>!function(t){function n(r){if(e[r])return e[r].exports;var o=e[r]={exports:{},id:r,loaded:!1};return t[r].call(o.exports,o,o.exports,n),o.loaded=!0,o.exports}var e={};return n.m=t,n.c=e,n.p="./",n(0)}([function(t,n,e){"use strict";function r(t){return t&&t.__esModule?t:{default:t}}function o(t,n){var e=/\/|index.html/g;return t.replace(e,"")===n.replace(e,"")}function i(){for(var t=document.querySelectorAll(".js-header-menu li a"),n=window.location.pathname,e=0,r=t.length;e<r;e++){var i=t[e];o(n,i.getAttribute("href"))&&(0,d.default)(i,"active")}}function u(t){for(var n=t.offsetLeft,e=t.offsetParent;null!==e;)n+=e.offsetLeft,e=e.offsetParent;return n}function f(t){for(var n=t.offsetTop,e=t.offsetParent;null!==e;)n+=e.offsetTop,e=e.offsetParent;return n}function c(t,n,e,r,o){var i=u(t),c=f(t)-n;if(c-e<=o){var a=t.$newDom;a||(a=t.cloneNode(!0),(0,h.default)(t,a),t.$newDom=a,a.style.position="fixed",a.style.top=(e||c)+"px",a.style.left=i+"px",a.style.zIndex=r||2,a.style.width="100%",a.style.color="#fff"),a.style.visibility="visible",t.style.visibility="hidden"}else{t.style.visibility="visible";var s=t.$newDom;s&&(s.style.visibility="hidden")}}function a(){var t=document.querySelector(".js-overlay"),n=document.querySelector(".js-header-menu");c(t,document.body.scrollTop,-63,2,0),c(n,document.body.scrollTop,1,3,0)}function s(){document.querySelector("#container").addEventListener("scroll",function(t){a()}),window.addEventListener("scroll",function(t){a()}),a()}function l(){x.default.versions.mobile&&window.screen.width<800&&(i(),s())}var p=e(71),d=r(p),v=e(72),y=(r(v),e(84)),h=r(y),b=e(69),x=r(b),m=e(75),g=r(m),w=e(70);l(),(0,w.addLoadEvent)(function(){g.default.init()}),t.exports={}},function(t,n){var e=t.exports="undefined"!=typeof window&&window.Math==Math?window:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")();"number"==typeof __g&&(__g=e)},function(t,n){var e={}.hasOwnProperty;t.exports=function(t,n){return e.call(t,n)}},function(t,n,e){var r=e(49),o=e(15);t.exports=function(t){return r(o(t))}},function(t,n,e){t.exports=!e(8)(function(){return 7!=Object.defineProperty({},"a",{get:function(){return 7}}).a})},function(t,n,e){var r=e(6),o=e(12);t.exports=e(4)?function(t,n,e){return r.f(t,n,o(1,e))}:function(t,n,e){return t[n]=e,t}},function(t,n,e){var r=e(10),o=e(30),i=e(24),u=Object.defineProperty;n.f=e(4)?Object.defineProperty:function(t,n,e){if(r(t),n=i(n,!0),r(e),o)try{return u(t,n,e)}catch(t){}if("get"in e||"set"in e)throw TypeError("Accessors not supported!");return"value"in e&&(t[n]=e.value),t}},function(t,n,e){var r=e(22)("wks"),o=e(13),i=e(1).Symbol,u="function"==typeof i,f=t.exports=function(t){return r[t]||(r[t]=u&&i[t]||(u?i:o)("Symbol."+t))};f.store=r},function(t,n){t.exports=function(t){try{return!!t()}catch(t){return!0}}},function(t,n,e){var r=e(35),o=e(16);t.exports=Object.keys||function(t){return r(t,o)}},function(t,n,e){var r=e(11);t.exports=function(t){if(!r(t))throw TypeError(t+" is not an object!");return t}},function(t,n){t.exports=function(t){return"object"==typeof t?null!==t:"function"==typeof t}},function(t,n){t.exports=function(t,n){return{enumerable:!(1&t),configurable:!(2&t),writable:!(4&t),value:n}}},function(t,n){var e=0,r=Math.random();t.exports=function(t){return"Symbol(".concat(void 0===t?"":t,")_",(++e+r).toString(36))}},function(t,n){var e=t.exports={version:"2.4.0"};"number"==typeof __e&&(__e=e)},function(t,n){t.exports=function(t){if(void 0==t)throw TypeError("Can't call method on  "+t);return t}},function(t,n){t.exports="constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf".split(",")},function(t,n){t.exports={}},function(t,n){t.exports=!0},function(t,n){n.f={}.propertyIsEnumerable},function(t,n,e){var r=e(6).f,o=e(2),i=e(7)("toStringTag");t.exports=function(t,n,e){t&&!o(t=e?t:t.prototype,i)&&r(t,i,{configurable:!0,value:n})}},function(t,n,e){var r=e(22)("keys"),o=e(13);t.exports=function(t){return r[t]||(r[t]=o(t))}},function(t,n,e){var r=e(1),o="__core-js_shared__",i=r[o]||(r[o]={});t.exports=function(t){return i[t]||(i[t]={})}},function(t,n){var e=Math.ceil,r=Math.floor;t.exports=function(t){return isNaN(t=+t)?0:(t>0?r:e)(t)}},function(t,n,e){var r=e(11);t.exports=function(t,n){if(!r(t))return t;var e,o;if(n&&"function"==typeof(e=t.toString)&&!r(o=e.call(t)))return o;if("function"==typeof(e=t.valueOf)&&!r(o=e.call(t)))return o;if(!n&&"function"==typeof(e=t.toString)&&!r(o=e.call(t)))return o;throw TypeError("Can't convert object to primitive value")}},function(t,n,e){var r=e(1),o=e(14),i=e(18),u=e(26),f=e(6).f;t.exports=function(t){var n=o.Symbol||(o.Symbol=i?{}:r.Symbol||{});"_"==t.charAt(0)||t in n||f(n,t,{value:u.f(t)})}},function(t,n,e){n.f=e(7)},function(t,n,e){var r=e(1),o=e(14),i=e(46),u=e(5),f="prototype",c=function(t,n,e){var a,s,l,p=t&c.F,d=t&c.G,v=t&c.S,y=t&c.P,h=t&c.B,b=t&c.W,x=d?o:o[n]||(o[n]={}),m=x[f],g=d?r:v?r[n]:(r[n]||{})[f];d&&(e=n);for(a in e)s=!p&&g&&void 0!==g[a],s&&a in x||(l=s?g[a]:e[a],x[a]=d&&"function"!=typeof g[a]?e[a]:h&&s?i(l,r):b&&g[a]==l?function(t){var n=function(n,e,r){if(this instanceof t){switch(arguments.length){case 0:return new t;case 1:return new t(n);case 2:return new t(n,e)}return new t(n,e,r)}return t.apply(this,arguments)};return n[f]=t[f],n}(l):y&&"function"==typeof l?i(Function.call,l):l,y&&((x.virtual||(x.virtual={}))[a]=l,t&c.R&&m&&!m[a]&&u(m,a,l)))};c.F=1,c.G=2,c.S=4,c.P=8,c.B=16,c.W=32,c.U=64,c.R=128,t.exports=c},function(t,n){var e={}.toString;t.exports=function(t){return e.call(t).slice(8,-1)}},function(t,n,e){var r=e(11),o=e(1).document,i=r(o)&&r(o.createElement);t.exports=function(t){return i?o.createElement(t):{}}},function(t,n,e){t.exports=!e(4)&&!e(8)(function(){return 7!=Object.defineProperty(e(29)("div"),"a",{get:function(){return 7}}).a})},function(t,n,e){"use strict";var r=e(18),o=e(27),i=e(36),u=e(5),f=e(2),c=e(17),a=e(51),s=e(20),l=e(58),p=e(7)("iterator"),d=!([].keys&&"next"in[].keys()),v="@@iterator",y="keys",h="values",b=function(){return this};t.exports=function(t,n,e,x,m,g,w){a(e,n,x);var O,S,_,j=function(t){if(!d&&t in A)return A[t];switch(t){case y:return function(){return new e(this,t)};case h:return function(){return new e(this,t)}}return function(){return new e(this,t)}},P=n+" Iterator",E=m==h,M=!1,A=t.prototype,T=A[p]||A[v]||m&&A[m],L=T||j(m),N=m?E?j("entries"):L:void 0,C="Array"==n?A.entries||T:T;if(C&&(_=l(C.call(new t)),_!==Object.prototype&&(s(_,P,!0),r||f(_,p)||u(_,p,b))),E&&T&&T.name!==h&&(M=!0,L=function(){return T.call(this)}),r&&!w||!d&&!M&&A[p]||u(A,p,L),c[n]=L,c[P]=b,m)if(O={values:E?L:j(h),keys:g?L:j(y),entries:N},w)for(S in O)S in A||i(A,S,O[S]);else o(o.P+o.F*(d||M),n,O);return O}},function(t,n,e){var r=e(10),o=e(55),i=e(16),u=e(21)("IE_PROTO"),f=function(){},c="prototype",a=function(){var t,n=e(29)("iframe"),r=i.length,o="<",u=">";for(n.style.display="none",e(48).appendChild(n),n.src="javascript:",t=n.contentWindow.document,t.open(),t.write(o+"script"+u+"document.F=Object"+o+"/script"+u),t.close(),a=t.F;r--;)delete a[c][i[r]];return a()};t.exports=Object.create||function(t,n){var e;return null!==t?(f[c]=r(t),e=new f,f[c]=null,e[u]=t):e=a(),void 0===n?e:o(e,n)}},function(t,n,e){var r=e(35),o=e(16).concat("length","prototype");n.f=Object.getOwnPropertyNames||function(t){return r(t,o)}},function(t,n){n.f=Object.getOwnPropertySymbols},function(t,n,e){var r=e(2),o=e(3),i=e(45)(!1),u=e(21)("IE_PROTO");t.exports=function(t,n){var e,f=o(t),c=0,a=[];for(e in f)e!=u&&r(f,e)&&a.push(e);for(;n.length>c;)r(f,e=n[c++])&&(~i(a,e)||a.push(e));return a}},function(t,n,e){t.exports=e(5)},function(t,n,e){var r=e(15);t.exports=function(t){return Object(r(t))}},function(t,n,e){t.exports={default:e(41),__esModule:!0}},function(t,n,e){t.exports={default:e(42),__esModule:!0}},function(t,n,e){"use strict";function r(t){return t&&t.__esModule?t:{default:t}}n.__esModule=!0;var o=e(39),i=r(o),u=e(38),f=r(u),c="function"==typeof f.default&&"symbol"==typeof i.default?function(t){return typeof t}:function(t){return t&&"function"==typeof f.default&&t.constructor===f.default&&t!==f.default.prototype?"symbol":typeof t};n.default="function"==typeof f.default&&"symbol"===c(i.default)?function(t){return"undefined"==typeof t?"undefined":c(t)}:function(t){return t&&"function"==typeof f.default&&t.constructor===f.default&&t!==f.default.prototype?"symbol":"undefined"==typeof t?"undefined":c(t)}},function(t,n,e){e(65),e(63),e(66),e(67),t.exports=e(14).Symbol},function(t,n,e){e(64),e(68),t.exports=e(26).f("iterator")},function(t,n){t.exports=function(t){if("function"!=typeof t)throw TypeError(t+" is not a function!");return t}},function(t,n){t.exports=function(){}},function(t,n,e){var r=e(3),o=e(61),i=e(60);t.exports=function(t){return function(n,e,u){var f,c=r(n),a=o(c.length),s=i(u,a);if(t&&e!=e){for(;a>s;)if(f=c[s++],f!=f)return!0}else for(;a>s;s++)if((t||s in c)&&c[s]===e)return t||s||0;return!t&&-1}}},function(t,n,e){var r=e(43);t.exports=function(t,n,e){if(r(t),void 0===n)return t;switch(e){case 1:return function(e){return t.call(n,e)};case 2:return function(e,r){return t.call(n,e,r)};case 3:return function(e,r,o){return t.call(n,e,r,o)}}return function(){return t.apply(n,arguments)}}},function(t,n,e){var r=e(9),o=e(34),i=e(19);t.exports=function(t){var n=r(t),e=o.f;if(e)for(var u,f=e(t),c=i.f,a=0;f.length>a;)c.call(t,u=f[a++])&&n.push(u);return n}},function(t,n,e){t.exports=e(1).document&&document.documentElement},function(t,n,e){var r=e(28);t.exports=Object("z").propertyIsEnumerable(0)?Object:function(t){return"String"==r(t)?t.split(""):Object(t)}},function(t,n,e){var r=e(28);t.exports=Array.isArray||function(t){return"Array"==r(t)}},function(t,n,e){"use strict";var r=e(32),o=e(12),i=e(20),u={};e(5)(u,e(7)("iterator"),function(){return this}),t.exports=function(t,n,e){t.prototype=r(u,{next:o(1,e)}),i(t,n+" Iterator")}},function(t,n){t.exports=function(t,n){return{value:n,done:!!t}}},function(t,n,e){var r=e(9),o=e(3);t.exports=function(t,n){for(var e,i=o(t),u=r(i),f=u.length,c=0;f>c;)if(i[e=u[c++]]===n)return e}},function(t,n,e){var r=e(13)("meta"),o=e(11),i=e(2),u=e(6).f,f=0,c=Object.isExtensible||function(){return!0},a=!e(8)(function(){return c(Object.preventExtensions({}))}),s=function(t){u(t,r,{value:{i:"O"+ ++f,w:{}}})},l=function(t,n){if(!o(t))return"symbol"==typeof t?t:("string"==typeof t?"S":"P")+t;if(!i(t,r)){if(!c(t))return"F";if(!n)return"E";s(t)}return t[r].i},p=function(t,n){if(!i(t,r)){if(!c(t))return!0;if(!n)return!1;s(t)}return t[r].w},d=function(t){return a&&v.NEED&&c(t)&&!i(t,r)&&s(t),t},v=t.exports={KEY:r,NEED:!1,fastKey:l,getWeak:p,onFreeze:d}},function(t,n,e){var r=e(6),o=e(10),i=e(9);t.exports=e(4)?Object.defineProperties:function(t,n){o(t);for(var e,u=i(n),f=u.length,c=0;f>c;)r.f(t,e=u[c++],n[e]);return t}},function(t,n,e){var r=e(19),o=e(12),i=e(3),u=e(24),f=e(2),c=e(30),a=Object.getOwnPropertyDescriptor;n.f=e(4)?a:function(t,n){if(t=i(t),n=u(n,!0),c)try{return a(t,n)}catch(t){}if(f(t,n))return o(!r.f.call(t,n),t[n])}},function(t,n,e){var r=e(3),o=e(33).f,i={}.toString,u="object"==typeof window&&window&&Object.getOwnPropertyNames?Object.getOwnPropertyNames(window):[],f=function(t){try{return o(t)}catch(t){return u.slice()}};t.exports.f=function(t){return u&&"[object Window]"==i.call(t)?f(t):o(r(t))}},function(t,n,e){var r=e(2),o=e(37),i=e(21)("IE_PROTO"),u=Object.prototype;t.exports=Object.getPrototypeOf||function(t){return t=o(t),r(t,i)?t[i]:"function"==typeof t.constructor&&t instanceof t.constructor?t.constructor.prototype:t instanceof Object?u:null}},function(t,n,e){var r=e(23),o=e(15);t.exports=function(t){return function(n,e){var i,u,f=String(o(n)),c=r(e),a=f.length;return c<0||c>=a?t?"":void 0:(i=f.charCodeAt(c),i<55296||i>56319||c+1===a||(u=f.charCodeAt(c+1))<56320||u>57343?t?f.charAt(c):i:t?f.slice(c,c+2):(i-55296<<10)+(u-56320)+65536)}}},function(t,n,e){var r=e(23),o=Math.max,i=Math.min;t.exports=function(t,n){return t=r(t),t<0?o(t+n,0):i(t,n)}},function(t,n,e){var r=e(23),o=Math.min;t.exports=function(t){return t>0?o(r(t),9007199254740991):0}},function(t,n,e){"use strict";var r=e(44),o=e(52),i=e(17),u=e(3);t.exports=e(31)(Array,"Array",function(t,n){this._t=u(t),this._i=0,this._k=n},function(){var t=this._t,n=this._k,e=this._i++;return!t||e>=t.length?(this._t=void 0,o(1)):"keys"==n?o(0,e):"values"==n?o(0,t[e]):o(0,[e,t[e]])},"values"),i.Arguments=i.Array,r("keys"),r("values"),r("entries")},function(t,n){},function(t,n,e){"use strict";var r=e(59)(!0);e(31)(String,"String",function(t){this._t=String(t),this._i=0},function(){var t,n=this._t,e=this._i;return e>=n.length?{value:void 0,done:!0}:(t=r(n,e),this._i+=t.length,{value:t,done:!1})})},function(t,n,e){"use strict";var r=e(1),o=e(2),i=e(4),u=e(27),f=e(36),c=e(54).KEY,a=e(8),s=e(22),l=e(20),p=e(13),d=e(7),v=e(26),y=e(25),h=e(53),b=e(47),x=e(50),m=e(10),g=e(3),w=e(24),O=e(12),S=e(32),_=e(57),j=e(56),P=e(6),E=e(9),M=j.f,A=P.f,T=_.f,L=r.Symbol,N=r.JSON,C=N&&N.stringify,k="prototype",F=d("_hidden"),q=d("toPrimitive"),I={}.propertyIsEnumerable,B=s("symbol-registry"),D=s("symbols"),W=s("op-symbols"),H=Object[k],K="function"==typeof L,R=r.QObject,J=!R||!R[k]||!R[k].findChild,U=i&&a(function(){return 7!=S(A({},"a",{get:function(){return A(this,"a",{value:7}).a}})).a})?function(t,n,e){var r=M(H,n);r&&delete H[n],A(t,n,e),r&&t!==H&&A(H,n,r)}:A,G=function(t){var n=D[t]=S(L[k]);return n._k=t,n},$=K&&"symbol"==typeof L.iterator?function(t){return"symbol"==typeof t}:function(t){return t instanceof L},z=function(t,n,e){return t===H&&z(W,n,e),m(t),n=w(n,!0),m(e),o(D,n)?(e.enumerable?(o(t,F)&&t[F][n]&&(t[F][n]=!1),e=S(e,{enumerable:O(0,!1)})):(o(t,F)||A(t,F,O(1,{})),t[F][n]=!0),U(t,n,e)):A(t,n,e)},Y=function(t,n){m(t);for(var e,r=b(n=g(n)),o=0,i=r.length;i>o;)z(t,e=r[o++],n[e]);return t},Q=function(t,n){return void 0===n?S(t):Y(S(t),n)},X=function(t){var n=I.call(this,t=w(t,!0));return!(this===H&&o(D,t)&&!o(W,t))&&(!(n||!o(this,t)||!o(D,t)||o(this,F)&&this[F][t])||n)},V=function(t,n){if(t=g(t),n=w(n,!0),t!==H||!o(D,n)||o(W,n)){var e=M(t,n);return!e||!o(D,n)||o(t,F)&&t[F][n]||(e.enumerable=!0),e}},Z=function(t){for(var n,e=T(g(t)),r=[],i=0;e.length>i;)o(D,n=e[i++])||n==F||n==c||r.push(n);return r},tt=function(t){for(var n,e=t===H,r=T(e?W:g(t)),i=[],u=0;r.length>u;)!o(D,n=r[u++])||e&&!o(H,n)||i.push(D[n]);return i};K||(L=function(){if(this instanceof L)throw TypeError("Symbol is not a constructor!");var t=p(arguments.length>0?arguments[0]:void 0),n=function(e){this===H&&n.call(W,e),o(this,F)&&o(this[F],t)&&(this[F][t]=!1),U(this,t,O(1,e))};return i&&J&&U(H,t,{configurable:!0,set:n}),G(t)},f(L[k],"toString",function(){return this._k}),j.f=V,P.f=z,e(33).f=_.f=Z,e(19).f=X,e(34).f=tt,i&&!e(18)&&f(H,"propertyIsEnumerable",X,!0),v.f=function(t){return G(d(t))}),u(u.G+u.W+u.F*!K,{Symbol:L});for(var nt="hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables".split(","),et=0;nt.length>et;)d(nt[et++]);for(var nt=E(d.store),et=0;nt.length>et;)y(nt[et++]);u(u.S+u.F*!K,"Symbol",{for:function(t){return o(B,t+="")?B[t]:B[t]=L(t)},keyFor:function(t){if($(t))return h(B,t);throw TypeError(t+" is not a symbol!")},useSetter:function(){J=!0},useSimple:function(){J=!1}}),u(u.S+u.F*!K,"Object",{create:Q,defineProperty:z,defineProperties:Y,getOwnPropertyDescriptor:V,getOwnPropertyNames:Z,getOwnPropertySymbols:tt}),N&&u(u.S+u.F*(!K||a(function(){var t=L();return"[null]"!=C([t])||"{}"!=C({a:t})||"{}"!=C(Object(t))})),"JSON",{stringify:function(t){if(void 0!==t&&!$(t)){for(var n,e,r=[t],o=1;arguments.length>o;)r.push(arguments[o++]);return n=r[1],"function"==typeof n&&(e=n),!e&&x(n)||(n=function(t,n){if(e&&(n=e.call(this,t,n)),!$(n))return n}),r[1]=n,C.apply(N,r)}}}),L[k][q]||e(5)(L[k],q,L[k].valueOf),l(L,"Symbol"),l(Math,"Math",!0),l(r.JSON,"JSON",!0)},function(t,n,e){e(25)("asyncIterator")},function(t,n,e){e(25)("observable")},function(t,n,e){e(62);for(var r=e(1),o=e(5),i=e(17),u=e(7)("toStringTag"),f=["NodeList","DOMTokenList","MediaList","StyleSheetList","CSSRuleList"],c=0;c<5;c++){var a=f[c],s=r[a],l=s&&s.prototype;l&&!l[u]&&o(l,u,a),i[a]=i.Array}},function(t,n){"use strict";var e={versions:function(){var t=window.navigator.userAgent;return{trident:t.indexOf("Trident")>-1,presto:t.indexOf("Presto")>-1,webKit:t.indexOf("AppleWebKit")>-1,gecko:t.indexOf("Gecko")>-1&&t.indexOf("KHTML")==-1,mobile:!!t.match(/AppleWebKit.*Mobile.*/),ios:!!t.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/),android:t.indexOf("Android")>-1||t.indexOf("Linux")>-1,iPhone:t.indexOf("iPhone")>-1||t.indexOf("Mac")>-1,iPad:t.indexOf("iPad")>-1,webApp:t.indexOf("Safari")==-1,weixin:t.indexOf("MicroMessenger")==-1}}()};t.exports=e},function(t,n,e){"use strict";function r(t){return t&&t.__esModule?t:{default:t}}var o=e(40),i=r(o),u=function(){function t(t,n,e){return n||e?String.fromCharCode(n||e):o[t]||t}function n(t){return l[t]}var e=/&quot;|&lt;|&gt;|&amp;|&nbsp;|&apos;|&#(\d+);|&#(\d+)/g,r=/['<> "&]/g,o={"&quot;":'"',"&lt;":"<","&gt;":">","&amp;":"&","&nbsp;":" "},f=/\u00a0/g,c=/<br\s*\/?>/gi,a=/\r?\n/g,s=/\s/g,l={};for(var p in o)l[o[p]]=p;return o["&apos;"]="'",l["'"]="&#39;",{encode:function(t){return t?(""+t).replace(r,n).replace(a,"<br/>").replace(s,"&nbsp;"):""},decode:function(n){return n?(""+n).replace(c,"\n").replace(e,t).replace(f," "):""},encodeBase16:function(t){if(!t)return t;t+="";for(var n=[],e=0,r=t.length;r>e;e++)n.push(t.charCodeAt(e).toString(16).toUpperCase());return n.join("")},encodeBase16forJSON:function(t){if(!t)return t;t=t.replace(/[\u4E00-\u9FBF]/gi,function(t){return escape(t).replace("%u","\\u")});for(var n=[],e=0,r=t.length;r>e;e++)n.push(t.charCodeAt(e).toString(16).toUpperCase());return n.join("")},decodeBase16:function(t){if(!t)return t;t+="";for(var n=[],e=0,r=t.length;r>e;e+=2)n.push(String.fromCharCode("0x"+t.slice(e,e+2)));return n.join("")},encodeObject:function(t){if(t instanceof Array)for(var n=0,e=t.length;e>n;n++)t[n]=u.encodeObject(t[n]);else if("object"==("undefined"==typeof t?"undefined":(0,i.default)(t)))for(var r in t)t[r]=u.encodeObject(t[r]);else if("string"==typeof t)return u.encode(t);return t},loadScript:function(t){var n=document.createElement("script");document.getElementsByTagName("body")[0].appendChild(n),n.setAttribute("src",t)},addLoadEvent:function(t){var n=window.onload;"function"!=typeof window.onload?window.onload=t:window.onload=function(){n(),t()}}}}();t.exports=u},function(t,n){function e(t,n){t.classList?t.classList.add(n):t.className+=" "+n}t.exports=e},function(t,n){function e(t,n){if(t.classList)t.classList.remove(n);else{var e=new RegExp("(^|\\b)"+n.split(" ").join("|")+"(\\b|$)","gi");t.className=t.className.replace(e," ")}}t.exports=e},,,function(t,n){"use strict";function e(){var t=document.querySelector("#page-nav");if(t&&!document.querySelector("#page-nav .extend.prev")&&(t.innerHTML='<a class="extend prev disabled" rel="prev">&laquo; Prev</a>'+t.innerHTML),t&&!document.querySelector("#page-nav .extend.next")&&(t.innerHTML=t.innerHTML+'<a class="extend next disabled" rel="next">Next &raquo;</a>'),yiliaConfig&&yiliaConfig.open_in_new){var n=document.querySelectorAll(".article-entry a:not(.article-more-a)");n.forEach(function(t){t.setAttribute("target","_blank")})}var e=document.querySelector("#js-aboutme");e&&0!==e.length&&(e.innerHTML=e.innerText)}t.exports={init:e}},,,,,,,,,function(t,n){function e(t,n){if("string"==typeof n)return t.insertAdjacentHTML("afterend",n);var e=t.nextSibling;return e?t.parentNode.insertBefore(n,e):t.parentNode.appendChild(n)}t.exports=e}])</script><script src="/./main.4a524f.js"></script><script>!function(){var e=function(e){var t=document.createElement("script");document.getElementsByTagName("body")[0].appendChild(t),t.setAttribute("src",e)};e("/slider.885efe.js")}()</script>
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+    
+<div class="tools-col" q-class="show:isShow,hide:isShow|isFalse" q-on="click:stop(e)">
+  <div class="tools-nav header-menu">
+    
+    
+      
+      
+      
+    
+      
+    
+      
+      
+      
+    
+    
+
+    <ul style="width: 70%">
+    
+    
+      
+      <li style="width: 50%" q-on="click: openSlider(e, 'innerArchive')"><a href="javascript:void(0)" q-class="active:innerArchive">所有文章</a></li>
+      
+        
+      
+        
+      
+      <li style="width: 50%" q-on="click: openSlider(e, 'aboutme')"><a href="javascript:void(0)" q-class="active:aboutme">关于我</a></li>
+      
+        
+    </ul>
+  </div>
+  <div class="tools-wrap">
+    
+    	<section class="tools-section tools-section-all" q-show="innerArchive">
+        <div class="search-wrap">
+          <input class="search-ipt" q-model="search" type="text" placeholder="find something…">
+          <i class="icon-search icon" q-show="search|isEmptyStr"></i>
+          <i class="icon-close icon" q-show="search|isNotEmptyStr" q-on="click:clearChose(e)"></i>
+        </div>
+        <div class="widget tagcloud search-tag">
+          <p class="search-tag-wording">tag:</p>
+          <label class="search-switch">
+            <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
+          </label>
+          <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">C</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">mysql</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">文件系统</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">dns</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">git</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">blog</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">httpd</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">算法</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">linux</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">lua</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">mac</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">maven</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">架构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">php</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">python</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">rabbitmq</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">redis</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">rpc</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">ruby</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ssh</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">svn</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">todo</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tornado</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">vim</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">其它</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">运维工具</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">os</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">rpm</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">cdn</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">虚拟化技术</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">gitlab</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">go</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">iptables</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">spring</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">历史</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">thrift</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">协程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">锁</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">xxx</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">saas</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">网络</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">virtualbox</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">计算机</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">电影篇</a>
+              </li>
+            
+            <div class="clearfix"></div>
+          </ul>
+        </div>
+        <ul class="search-ul">
+          <p q-show="jsonFail" style="padding: 20px; font-size: 12px;">
+            缺失模块。<br/>1、在博客根目录（注意不是yilia根目录）执行以下命令：<br/> npm i hexo-generator-json-content --save<br/><br/>
+            2、在根目录_config.yml里添加配置：
+<pre style="font-size: 12px;" q-show="jsonFail">
+  jsonContent:
+    meta: false
+    pages: false
+    posts:
+      title: true
+      date: true
+      path: true
+      text: true
+      raw: false
+      content: false
+      slug: false
+      updated: false
+      comments: false
+      link: false
+      permalink: false
+      excerpt: false
+      categories: false
+      tags: true
+</pre>
+          </p>
+          <li class="search-li" q-repeat="items" q-show="isShow">
+            <a q-attr="href:path|urlformat" class="search-title"><i class="icon-quo-left icon"></i><span q-text="title"></span></a>
+            <p class="search-time">
+              <i class="icon-calendar icon"></i>
+              <span q-text="date|dateformat"></span>
+            </p>
+            <p class="search-tag">
+              <i class="icon-price-tags icon"></i>
+              <span q-repeat="tags" q-on="click:choseTag(e, name)" q-text="name|tagformat"></span>
+            </p>
+          </li>
+        </ul>
+    	</section>
+    
+
+    
+
+    
+    	<section class="tools-section tools-section-me" q-show="aboutme">
+  	  	
+  	  		<div class="aboutme-wrap" id="js-aboutme">王彪&lt;br&gt;计算机科学与技术专业&lt;br&gt;email:841824090@qq.com&lt;br&gt;2009-2013 苏州大学&lt;br&gt;2013-2015 苏州思必驰信息科技有限公司&lt;br&gt;2016-2017 美团&lt;br&gt;2017-至今 搜狗</div>
+  	  	
+    	</section>
+    
+  </div>
+  
+</div>
+    <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>
